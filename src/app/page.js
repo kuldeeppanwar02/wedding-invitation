@@ -182,15 +182,14 @@ function GoldDivider({ width = "60%" }) {
 //  MAIN WEDDING INVITATION
 // ═══════════════════════════════════════════════
 export default function WeddingInvitation() {
+    const [isStarted, setIsStarted] = useState(false);
     const [step, setStep] = useState(1);
     const audioRef = useRef(null);
-    const audioStartedRef = useRef(false);
     const touchStartRef = useRef(null);
     const TOTAL_STEPS = 5;
 
-    // ──── Audio Setup (Always On) ────
+    // ──── Audio Setup ────
     useEffect(() => {
-        // Encode filename properly — the # chars break URLs without encoding
         const fileName = encodeURIComponent('Vakratunda Mahakaya वकरतड महकय  Ganesh Mantra #god #bhakti.mp3');
         const audio = new Audio('/audio/' + fileName);
         audio.loop = true;
@@ -198,35 +197,30 @@ export default function WeddingInvitation() {
         audio.preload = 'auto';
         audioRef.current = audio;
 
-        // Try to auto-play immediately
-        audio.play().catch(() => {});
-
-        // Fallback: play on first user interaction (browsers block autoplay)
-        const startAudio = () => {
-            if (!audioStartedRef.current && audioRef.current) {
-                audioRef.current.play().catch(() => {});
-                audioStartedRef.current = true;
-            }
-        };
-        document.addEventListener('click', startAudio, { once: true });
-        document.addEventListener('touchstart', startAudio, { once: true });
-
         return () => {
             audio.pause();
             audio.src = '';
-            document.removeEventListener('click', startAudio);
-            document.removeEventListener('touchstart', startAudio);
         };
+    }, []);
+
+    // ──── Start the invitation ────
+    const handleStart = useCallback(() => {
+        setIsStarted(true);
+        // Guaranteed to work — user just tapped!
+        if (audioRef.current) {
+            audioRef.current.play().catch(() => {});
+        }
     }, []);
 
     // ──── Auto-advance: 5 seconds per step ────
     useEffect(() => {
-        if (step >= TOTAL_STEPS) return; // Don't auto-advance past last step
+        if (!isStarted) return;
+        if (step >= TOTAL_STEPS) return;
         const timer = setTimeout(() => {
             setStep(prev => prev + 1);
         }, 5000);
         return () => clearTimeout(timer);
-    }, [step]);
+    }, [step, isStarted]);
 
     // ──── Navigation ────
     const goToStep = useCallback((newStep) => {
@@ -248,9 +242,9 @@ export default function WeddingInvitation() {
         const diff = touchStartRef.current - e.changedTouches[0].clientX;
         if (Math.abs(diff) > 50) {
             if (diff > 0) {
-                goToStep(Math.min(step + 1, TOTAL_STEPS)); // Swipe left → next
+                goToStep(Math.min(step + 1, TOTAL_STEPS));
             } else {
-                goToStep(Math.max(step - 1, 1)); // Swipe right → prev
+                goToStep(Math.max(step - 1, 1));
             }
         }
         touchStartRef.current = null;
@@ -258,6 +252,7 @@ export default function WeddingInvitation() {
 
     // ──── Dynamic Background ────
     const bgGradient = useMemo(() => {
+        if (!isStarted) return 'radial-gradient(ellipse at 50% 40%, #1a0800 0%, #0a0000 50%, #000000 100%)';
         switch (step) {
             case 1: return 'radial-gradient(ellipse at 50% 30%, #1a0500 0%, #0a0000 50%, #000000 100%)';
             case 2: return 'radial-gradient(ellipse at 50% 50%, #1a0800 0%, #0d0200 60%, #050000 100%)';
@@ -266,10 +261,94 @@ export default function WeddingInvitation() {
             case 5: return 'radial-gradient(ellipse at 50% 70%, #1a0d00 0%, #0a0500 50%, #050000 100%)';
             default: return '#0a0000';
         }
-    }, [step]);
+    }, [step, isStarted]);
 
     const easeOut = [0.22, 1, 0.36, 1];
 
+    // ╔══════════════════════════════════════════╗
+    // ║  SPLASH SCREEN: TAP TO OPEN             ║
+    // ╚══════════════════════════════════════════╝
+    if (!isStarted) {
+        return (
+            <main
+                className="relative h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center cursor-pointer"
+                style={{ background: bgGradient }}
+                onClick={handleStart}
+                onTouchEnd={handleStart}
+            >
+                <Sparkles count={25} />
+
+                {/* Envelope / Invitation Icon */}
+                <motion.div
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex flex-col items-center"
+                >
+                    {/* Envelope */}
+                    <motion.div
+                        initial={{ scale: 0, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ duration: 0.8, type: "spring", stiffness: 150 }}
+                        className="text-7xl mb-6"
+                        style={{ filter: 'drop-shadow(0 0 25px rgba(212, 175, 55, 0.5))' }}
+                    >
+                        💌
+                    </motion.div>
+
+                    {/* Title */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="gold-text-3d text-3xl md:text-4xl mb-3"
+                        style={{ fontFamily: "'Great Vibes', cursive" }}
+                    >
+                        You&#39;re Invited
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                        className="text-sm tracking-[0.3em] mb-2 font-light"
+                        style={{ color: 'rgba(212, 175, 55, 0.5)', fontFamily: "'Noto Sans Devanagari', sans-serif" }}
+                    >
+                        भारत ❤️ पारुल
+                    </motion.p>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        className="text-xs tracking-wider uppercase"
+                        style={{ color: 'rgba(212, 175, 55, 0.35)' }}
+                    >
+                        19 — 20 April 2026
+                    </motion.p>
+                </motion.div>
+
+                {/* Tap instruction */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{ delay: 1.2, duration: 2, repeat: Infinity }}
+                    className="absolute bottom-16 flex flex-col items-center gap-2"
+                >
+                    <span className="text-2xl">👆</span>
+                    <span
+                        className="text-xs tracking-[0.25em] uppercase font-medium"
+                        style={{ color: 'rgba(212, 175, 55, 0.5)' }}
+                    >
+                        Tap to Open
+                    </span>
+                </motion.div>
+            </main>
+        );
+    }
+
+    // ╔══════════════════════════════════════════╗
+    // ║  MAIN INVITATION                        ║
+    // ╚══════════════════════════════════════════╝
     return (
         <main
             className="relative h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center"
@@ -282,7 +361,6 @@ export default function WeddingInvitation() {
 
             {/* Marigold Rain (Steps 3+) */}
             {step >= 3 && <MarigoldRain />}
-
 
 
             {/* ════ MAIN CONTENT ════ */}
