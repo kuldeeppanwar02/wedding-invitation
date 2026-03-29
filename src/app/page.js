@@ -310,10 +310,19 @@ export default function WeddingInvitation() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.6 }}
-                        className="text-sm tracking-[0.3em] mb-2 font-light"
-                        style={{ color: 'rgba(212, 175, 55, 0.5)', fontFamily: "'Noto Sans Devanagari', sans-serif" }}
+                        className="text-sm tracking-[0.3em] mb-1 font-light"
+                        style={{ color: 'rgba(212, 175, 55, 0.6)', fontFamily: "'Poppins', sans-serif" }}
                     >
-                        भारत ❤️ पारुल
+                        Panwar &amp; Khandelwal
+                    </motion.p>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 }}
+                        className="text-xs tracking-[0.4em] uppercase font-light"
+                        style={{ color: 'rgba(212, 175, 55, 0.35)' }}
+                    >
+                        Family
                     </motion.p>
 
                     <motion.p
