@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Bharat & Parul - Wedding Invitation 💍',
-  description: '॥ श्री गणेशाय नमः ॥ | Divine 3D Wedding Invitation for Bharat & Parul | 19-20 April 2026',
+  title: 'Parul & bharat - Wedding Invitation 💍',
+  description: '॥ श्री गणेशाय नमः ॥ | Wedding Invitation for Bharat & Parul | 19-20 April 2026',
 }
 
 // Next.js 14: viewport must be a separate export
