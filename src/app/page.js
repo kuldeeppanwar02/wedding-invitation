@@ -450,6 +450,7 @@ export default function WeddingInvitationPage() {
           text-align: center;
           letter-spacing: 0.14em;
           font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+          line-height: 1.35;
           text-transform: uppercase;
         }
 
@@ -457,7 +458,9 @@ export default function WeddingInvitationPage() {
           margin: 18px 0 10px;
           text-align: center;
           font-size: clamp(3rem, 10vw, 5.75rem);
-          line-height: 0.94;
+          line-height: 1.16;
+          padding-top: 0.12em;
+          padding-bottom: 0.04em;
           font-weight: 700;
           font-family: "Noto Sans Devanagari", sans-serif;
         }
@@ -571,6 +574,8 @@ export default function WeddingInvitationPage() {
         .countdown-copy h3 {
           margin: 0;
           font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+          line-height: 1.24;
+          padding-top: 0.08em;
           font-family: "Noto Sans Devanagari", sans-serif;
         }
 
@@ -633,7 +638,9 @@ export default function WeddingInvitationPage() {
         .section-heading h2 {
           margin: 0;
           font-size: clamp(2rem, 4vw, 3.25rem);
-          line-height: 1.05;
+          line-height: 1.22;
+          padding-top: 0.12em;
+          padding-bottom: 0.04em;
           font-family: "Noto Sans Devanagari", sans-serif;
         }
 
@@ -692,6 +699,8 @@ export default function WeddingInvitationPage() {
           margin: 0 0 10px;
           font-family: "Noto Sans Devanagari", sans-serif;
           font-size: 1.4rem;
+          line-height: 1.2;
+          padding-top: 0.08em;
           color: var(--maroon-800);
         }
 
@@ -785,6 +794,8 @@ export default function WeddingInvitationPage() {
         .footer-section p {
           margin: 0;
           font-size: clamp(1.45rem, 3vw, 2.4rem);
+          line-height: 1.22;
+          padding-top: 0.08em;
           font-family: "Noto Sans Devanagari", sans-serif;
         }
 
