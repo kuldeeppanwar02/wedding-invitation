@@ -276,7 +276,8 @@ export default function WeddingInvitationPage() {
         .invitation-page {
           position: relative;
           min-height: 100vh;
-          overflow: hidden;
+          overflow-x: hidden;
+          overflow-y: visible;
           padding: 88px 20px 64px;
           isolation: isolate;
         }
