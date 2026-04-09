@@ -23,7 +23,8 @@
 }
 
 html, body {
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   background: #0a0000;

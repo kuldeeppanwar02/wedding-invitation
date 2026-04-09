@@ -1,858 +1,881 @@
-"use client";
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+﻿"use client";
 
-// ═══════════════════════════════════════════════
-// DECORATIVE CORNER ORNAMENT (Paisley/Mandala SVG)
-// ═══════════════════════════════════════════════
-function CornerOrnaments({ color = "#D4AF37" }) {
-    const svg = (
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 5 C5 5, 45 5, 55 15 C65 25, 65 45, 55 55 C45 65, 25 65, 15 55 C5 45, 5 25, 15 15 C20 10, 30 8, 40 12" stroke={color} strokeWidth="1.5" fill="none" />
-            <path d="M10 10 C10 10, 40 10, 48 18 C56 26, 56 46, 48 48 C40 50, 20 50, 18 42 C16 34, 18 20, 28 14" stroke={color} strokeWidth="1" fill="none" opacity="0.6" />
-            <circle cx="20" cy="20" r="3" fill={color} opacity="0.4" />
-            <circle cx="40" cy="15" r="2" fill={color} opacity="0.3" />
-            <circle cx="15" cy="40" r="2" fill={color} opacity="0.3" />
-            <path d="M5 5 Q15 5 15 15" stroke={color} strokeWidth="2" fill="none" opacity="0.5" />
-            <path d="M5 5 Q5 15 15 15" stroke={color} strokeWidth="2" fill="none" opacity="0.5" />
-        </svg>
-    );
-    return (
-        <>
-            <div className="corner-ornament corner-tl">{svg}</div>
-            <div className="corner-ornament corner-tr">{svg}</div>
-            <div className="corner-ornament corner-bl">{svg}</div>
-            <div className="corner-ornament corner-br">{svg}</div>
-        </>
-    );
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const EVENTS = [
+  { title: "विनायक", date: "18 अप्रैल", time: "सुबह 7 बजे" },
+  { title: "हल्दी एवं मेहंदी", date: "19 अप्रैल", time: "सुबह 12 बजे" },
+  { title: "संगीत", date: "19 अप्रैल", time: "शाम 7 बजे" },
+  { title: "फेरे", date: "20 अप्रैल", time: "सुबह 11 बजे" },
+  { title: "प्रीतिभोज", date: "20 अप्रैल", time: "शाम 7 बजे" },
+  { title: "विदाई", date: "21 अप्रैल", time: "सुबह 8 बजे" },
+];
+
+const WEDDING_DATE = new Date("2026-04-20T11:00:00+05:30");
+const AUDIO_FILE = encodeURIComponent(
+  "Vakratunda Mahakaya वकरतड महकय  Ganesh Mantra #god #bhakti.mp3"
+);
+
+function getTimeLeft(targetDate) {
+  const diff = targetDate.getTime() - Date.now();
+
+  if (diff <= 0) {
+    return { days: "00", hours: "00", minutes: "00", seconds: "00", finished: true };
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  return {
+    days: String(days).padStart(2, "0"),
+    hours: String(hours).padStart(2, "0"),
+    minutes: String(minutes).padStart(2, "0"),
+    seconds: String(seconds).padStart(2, "0"),
+    finished: false,
+  };
 }
 
-
-
-// ═══════════════════════════════════════════════
-// SVG HEART (Stylized, not emoji)
-// ═══════════════════════════════════════════════
-function GoldenHeart({ size = 40 }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" className="heart-beat">
-            <defs>
-                <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FF2D55" />
-                    <stop offset="50%" stopColor="#FF375F" />
-                    <stop offset="100%" stopColor="#D4145A" />
-                </linearGradient>
-                <filter id="heartGlow">
-                    <feGaussianBlur stdDeviation="2" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-            <path
-                d="M25 43 C25 43, 5 30, 5 18 C5 10, 12 5, 18 5 C22 5, 25 8, 25 12 C25 8, 28 5, 32 5 C38 5, 45 10, 45 18 C45 30, 25 43, 25 43Z"
-                fill="url(#heartGrad)"
-                filter="url(#heartGlow)"
-            />
-        </svg>
-    );
+function OrnamentalDivider() {
+  return (
+    <div className="ornamental-divider" aria-hidden="true">
+      <span />
+      <em>❦</em>
+      <span />
+    </div>
+  );
 }
 
-// ═══════════════════════════════════════════════
-// MARIGOLD PETALS (Improved flower-like shapes)
-// ═══════════════════════════════════════════════
-function MarigoldRain() {
-    const petals = useMemo(() => {
-        const colors = [
-            'radial-gradient(circle at 30% 30%, #FFD700, #FF8C00)',
-            'radial-gradient(circle at 30% 30%, #FFA500, #CC7000)',
-            'radial-gradient(circle at 30% 30%, #FFB347, #E67300)',
-            'radial-gradient(circle at 30% 30%, #FFCC33, #B8860B)',
-            'radial-gradient(circle at 30% 30%, #FF9900, #8B6914)',
-            'radial-gradient(circle at 30% 30%, #DAA520, #996515)',
-        ];
-        return Array.from({ length: 45 }, (_, i) => ({
-            id: i,
-            left: `${Math.random() * 100}%`,
-            size: 14 + Math.random() * 14, // 14-28px (bigger!)
-            bg: colors[Math.floor(Math.random() * colors.length)],
-            delay: Math.random() * 8,
-            duration: 6 + Math.random() * 6,
-        }));
-    }, []);
-
-    return (
-        <div className="marigold-rain">
-            {petals.map(p => (
-                <div
-                    key={p.id}
-                    className="petal"
-                    style={{
-                        left: p.left,
-                        width: p.size,
-                        height: p.size,
-                        animationDelay: `${p.delay}s`,
-                        animationDuration: `${p.duration}s`,
-                    }}
-                >
-                    {/* Multi-layer petal to simulate flower */}
-                    <div style={{
-                        width: '100%',
-                        height: '100%',
-                        background: p.bg,
-                        borderRadius: '50% 50% 50% 10%',
-                        position: 'relative',
-                        boxShadow: `0 0 8px rgba(255, 165, 0, 0.3)`,
-                    }}>
-                        <div style={{
-                            position: 'absolute',
-                            width: '70%',
-                            height: '70%',
-                            top: '15%',
-                            left: '15%',
-                            background: p.bg,
-                            borderRadius: '10% 50% 50% 50%',
-                            opacity: 0.7,
-                            transform: 'rotate(90deg)',
-                        }} />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
+function EventCard({ event, index }) {
+  return (
+    <article className="event-card reveal">
+      <div className="event-card-number">0{index + 1}</div>
+      <h3>{event.title}</h3>
+      <p>{event.date}</p>
+      <span>{event.time}</span>
+    </article>
+  );
 }
 
-// ═══════════════════════════════════════════════
-// SPARKLE PARTICLES
-// ═══════════════════════════════════════════════
-function Sparkles({ count = 30 }) {
-    const sparkles = useMemo(() =>
-        Array.from({ length: count }, (_, i) => ({
-            id: i,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            delay: Math.random() * 5,
-            size: 2 + Math.random() * 4,
-        })), [count]
-    );
+export default function WeddingInvitationPage() {
+  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(WEDDING_DATE));
+  const [musicEnabled, setMusicEnabled] = useState(false);
+  const audioRef = useRef(null);
 
-    return (
-        <div className="sparkle-container">
-            {sparkles.map(s => (
-                <div
-                    key={s.id}
-                    className="sparkle"
-                    style={{
-                        left: s.left,
-                        top: s.top,
-                        width: s.size,
-                        height: s.size,
-                        animationDelay: `${s.delay}s`,
-                    }}
-                />
-            ))}
-        </div>
-    );
-}
+  const countdownUnits = useMemo(
+    () => [
+      { label: "दिन", value: timeLeft.days },
+      { label: "घंटे", value: timeLeft.hours },
+      { label: "मिनट", value: timeLeft.minutes },
+      { label: "सेकंड", value: timeLeft.seconds },
+    ],
+    [timeLeft]
+  );
 
-// ═══════════════════════════════════════════════
-// PROGRESS INDICATOR
-// ═══════════════════════════════════════════════
-function ProgressDots({ current, total = 5 }) {
-    return (
-        <div className="flex items-center gap-2 justify-center">
-            {Array.from({ length: total }, (_, i) => (
-                <div
-                    key={i}
-                    className={`progress-dot ${i + 1 === current ? 'active' : ''}`}
-                />
-            ))}
-        </div>
-    );
-}
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setTimeLeft(getTimeLeft(WEDDING_DATE));
+    }, 1000);
 
-// ═══════════════════════════════════════════════
-// GOLD DIVIDER LINE
-// ═══════════════════════════════════════════════
-function GoldDivider({ width = "60%" }) {
-    return <div className="gold-divider" style={{ width }} />;
-}
+    return () => window.clearInterval(timer);
+  }, []);
 
-// ═══════════════════════════════════════════════
-//  MAIN WEDDING INVITATION
-// ═══════════════════════════════════════════════
-export default function WeddingInvitation() {
-    const [isStarted, setIsStarted] = useState(false);
-    const [step, setStep] = useState(1);
-    const audioRef = useRef(null);
-    const touchStartRef = useRef(null);
-    const TOTAL_STEPS = 5;
+  useEffect(() => {
+    const audio = new Audio(`/audio/${AUDIO_FILE}`);
+    audio.loop = true;
+    audio.volume = 0.45;
+    audio.preload = "auto";
+    audioRef.current = audio;
 
-    // ──── Audio Setup ────
-    useEffect(() => {
-        const fileName = encodeURIComponent('Vakratunda Mahakaya वकरतड महकय  Ganesh Mantra #god #bhakti.mp3');
-        const audio = new Audio('/audio/' + fileName);
-        audio.loop = true;
-        audio.volume = 0.6;
-        audio.preload = 'auto';
-        audioRef.current = audio;
+    return () => {
+      audio.pause();
+      audio.src = "";
+    };
+  }, []);
 
-        return () => {
-            audio.pause();
-            audio.src = '';
-        };
-    }, []);
+  useEffect(() => {
+    const nodes = Array.from(document.querySelectorAll(".reveal"));
 
-    // ──── Start the invitation ────
-    const handleStart = useCallback(() => {
-        setIsStarted(true);
-        // Guaranteed to work — user just tapped!
-        if (audioRef.current) {
-            audioRef.current.play().catch(() => {});
-        }
-    }, []);
-
-    // ──── Auto-advance: 5 seconds per step ────
-    useEffect(() => {
-        if (!isStarted) return;
-        if (step >= TOTAL_STEPS) return;
-        const timer = setTimeout(() => {
-            setStep(prev => prev + 1);
-        }, 5000);
-        return () => clearTimeout(timer);
-    }, [step, isStarted]);
-
-    // ──── Navigation ────
-    const goToStep = useCallback((newStep) => {
-        if (newStep < 1 || newStep > TOTAL_STEPS) return;
-        setStep(newStep);
-    }, []);
-
-    const handleReplay = useCallback(() => {
-        setStep(1);
-    }, []);
-
-    // ──── Swipe Gesture Support ────
-    const handleTouchStart = useCallback((e) => {
-        touchStartRef.current = e.touches[0].clientX;
-    }, []);
-
-    const handleTouchEnd = useCallback((e) => {
-        if (touchStartRef.current === null) return;
-        const diff = touchStartRef.current - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) {
-            if (diff > 0) {
-                goToStep(Math.min(step + 1, TOTAL_STEPS));
-            } else {
-                goToStep(Math.max(step - 1, 1));
-            }
-        }
-        touchStartRef.current = null;
-    }, [step, goToStep]);
-
-    // ──── Dynamic Background ────
-    const bgGradient = useMemo(() => {
-        if (!isStarted) return 'radial-gradient(ellipse at 50% 40%, #1a0800 0%, #0a0000 50%, #000000 100%)';
-        switch (step) {
-            case 1: return 'radial-gradient(ellipse at 50% 30%, #1a0500 0%, #0a0000 50%, #000000 100%)';
-            case 2: return 'radial-gradient(ellipse at 50% 50%, #1a0800 0%, #0d0200 60%, #050000 100%)';
-            case 3: return 'radial-gradient(ellipse at 50% 50%, #1a1000 0%, #0d0800 60%, #050200 100%)';
-            case 4: return 'radial-gradient(ellipse at 50% 30%, #2a0000 0%, #150000 50%, #0a0000 100%)';
-            case 5: return 'radial-gradient(ellipse at 50% 70%, #1a0d00 0%, #0a0500 50%, #050000 100%)';
-            default: return '#0a0000';
-        }
-    }, [step, isStarted]);
-
-    const easeOut = [0.22, 1, 0.36, 1];
-
-    // ╔══════════════════════════════════════════╗
-    // ║  SPLASH SCREEN: TAP TO OPEN             ║
-    // ╚══════════════════════════════════════════╝
-    if (!isStarted) {
-        return (
-            <main
-                className="relative h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center cursor-pointer"
-                style={{ background: bgGradient }}
-                onClick={handleStart}
-                onTouchEnd={handleStart}
-            >
-                <Sparkles count={25} />
-
-                {/* Envelope / Invitation Icon */}
-                <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                    className="flex flex-col items-center"
-                >
-                    {/* Envelope */}
-                    <motion.div
-                        initial={{ scale: 0, rotate: -10 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ duration: 0.8, type: "spring", stiffness: 150 }}
-                        className="text-7xl mb-6"
-                        style={{ filter: 'drop-shadow(0 0 25px rgba(212, 175, 55, 0.5))' }}
-                    >
-                        💌
-                    </motion.div>
-
-                    {/* Title */}
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="gold-text-3d text-3xl md:text-4xl mb-3"
-                        style={{ fontFamily: "'Great Vibes', cursive" }}
-                    >
-                        You&#39;re Invited
-                    </motion.h1>
-
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                        className="text-sm tracking-[0.3em] mb-1 font-light"
-                        style={{ color: 'rgba(212, 175, 55, 0.6)', fontFamily: "'Poppins', sans-serif" }}
-                    >
-                        Panwar &amp; Khandelwal
-                    </motion.p>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.7 }}
-                        className="text-xs tracking-[0.4em] uppercase font-light"
-                        style={{ color: 'rgba(212, 175, 55, 0.35)' }}
-                    >
-                        Family
-                    </motion.p>
-
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                        className="text-xs tracking-wider uppercase"
-                        style={{ color: 'rgba(212, 175, 55, 0.35)' }}
-                    >
-                        19 — 20 April 2026
-                    </motion.p>
-                </motion.div>
-
-                {/* Tap instruction */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0.3, 0.7, 0.3] }}
-                    transition={{ delay: 1.2, duration: 2, repeat: Infinity }}
-                    className="absolute bottom-16 flex flex-col items-center gap-2"
-                >
-                    <span className="text-2xl">👆</span>
-                    <span
-                        className="text-xs tracking-[0.25em] uppercase font-medium"
-                        style={{ color: 'rgba(212, 175, 55, 0.5)' }}
-                    >
-                        Tap to Open
-                    </span>
-                </motion.div>
-            </main>
-        );
+    if (!nodes.length) {
+      return undefined;
     }
 
-    // ╔══════════════════════════════════════════╗
-    // ║  MAIN INVITATION                        ║
-    // ╚══════════════════════════════════════════╝
-    return (
-        <main
-            className="relative h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center"
-            style={{ background: bgGradient, transition: 'background 1.5s ease-in-out' }}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-        >
-            {/* Ambient Sparkles */}
-            <Sparkles count={35} />
-
-            {/* Marigold Rain (Steps 3+) */}
-            {step >= 3 && <MarigoldRain />}
-
-
-            {/* ════ MAIN CONTENT ════ */}
-            <div className="relative z-10 w-full max-w-[400px] flex-1 flex flex-col items-center justify-center px-5">
-                <AnimatePresence mode="wait">
-
-                    {/* ╔══════════════════════════════════════╗
-                       ║  STEP 1: THE DIVINE OPENING (0-4s)  ║
-                       ╚══════════════════════════════════════╝ */}
-                    {step === 1 && (
-                        <motion.div
-                            key="step-divine"
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 6, filter: "blur(30px)" }}
-                            transition={{ duration: 1.5, ease: easeOut }}
-                            className="flex flex-col items-center justify-center text-center"
-                        >
-                            {/* ॥ श्री गणेशाय नमः ॥ */}
-                            <motion.h2
-                                initial={{ y: -30, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3, duration: 0.8 }}
-                                className="gold-text-3d text-xl md:text-2xl font-bold tracking-[0.25em] mb-10"
-                                style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
-                            >
-                                ॥ श्री गणेशाय नमः ॥
-                            </motion.h2>
-
-                            {/* Ganesha Icon with spinning mandala rings */}
-                            <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
-                                {/* Outer golden ring */}
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                                    className="absolute inset-0 rounded-full glow-pulse"
-                                    style={{
-                                        border: '2px solid rgba(212, 175, 55, 0.5)',
-                                        borderTopColor: '#D4AF37',
-                                        borderRightColor: '#FF8C00',
-                                    }}
-                                />
-                                {/* Inner counter-ring */}
-                                <motion.div
-                                    animate={{ rotate: -360 }}
-                                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                    className="absolute rounded-full"
-                                    style={{
-                                        inset: 12,
-                                        border: '1px solid rgba(255, 140, 0, 0.35)',
-                                        borderTopColor: '#FF8C00',
-                                        borderLeftColor: '#D4AF37',
-                                    }}
-                                />
-                                {/* Ambient glow */}
-                                <div className="absolute rounded-full" style={{
-                                    inset: 20,
-                                    background: 'radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%)',
-                                }} />
-                                {/* Ganesha Image */}
-                                <motion.div
-                                    animate={{ y: [0, -4, 0] }}
-                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                >
-                                    <img
-                                        src="/ganesha.png"
-                                        alt="Lord Ganesha"
-                                        width={130}
-                                        height={130}
-                                        style={{ filter: 'drop-shadow(0 0 20px rgba(255, 140, 0, 0.4))' }}
-                                    />
-                                </motion.div>
-                            </div>
-
-                            {/* Continuously scrolling mantra */}
-                            <div className="mt-10 w-full overflow-hidden relative" style={{ maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}>
-                                <motion.div
-                                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                >
-                                    <div className="mantra-scroll">
-                                        <span className="mantra-text">
-                                            ॐ वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ । निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥
-                                        </span>
-                                        <span className="mantra-text">
-                                            ॐ वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ । निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥
-                                        </span>
-                                    </div>
-                                </motion.div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* ╔══════════════════════════════════════╗
-                       ║  STEP 2: THE INTRODUCTION (4-8s)    ║
-                       ╚══════════════════════════════════════╝ */}
-                    {step === 2 && (
-                        <motion.div
-                            key="step-intro"
-                            initial={{ opacity: 0, filter: "blur(20px)" }}
-                            animate={{ opacity: 1, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: -60, filter: "blur(15px)" }}
-                            transition={{ duration: 1.2, ease: easeOut }}
-                            className="flex flex-col items-center justify-center text-center w-full"
-                        >
-                            {/* Blessings */}
-                            <motion.p
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="text-xs uppercase tracking-[0.35em] mb-2 font-light"
-                                style={{ color: 'rgba(212, 175, 55, 0.55)' }}
-                            >
-                                With the blessings of our beloved
-                            </motion.p>
-                            <motion.p
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                                className="text-xs uppercase tracking-[0.35em] mb-4 font-light"
-                                style={{ color: 'rgba(212, 175, 55, 0.55)' }}
-                            >
-                                parents & elders
-                            </motion.p>
-
-                            {/* Shubh Vivah */}
-                            <motion.h3
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
-                                className="text-2xl md:text-3xl font-bold mb-8 text-shadow-gold"
-                                style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", color: '#D4AF37' }}
-                            >
-                                शुभ विवाह निमंत्रण
-                            </motion.h3>
-
-                            {/* Decorative line top */}
-                            <motion.div
-                                initial={{ scaleX: 0 }}
-                                animate={{ scaleX: 1 }}
-                                transition={{ delay: 0.7, duration: 0.8 }}
-                            >
-                                <GoldDivider width="160px" />
-                            </motion.div>
-
-                            {/* Names */}
-                            <div className="my-4">
-                                <motion.h1
-                                    initial={{ x: -60, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: 0.8, duration: 0.8, ease: easeOut }}
-                                    className="gold-text-3d"
-                                    style={{ fontFamily: "'Great Vibes', cursive", fontSize: 'clamp(3rem, 11vw, 5rem)', lineHeight: 1.2 }}
-                                >
-                                    Bharat
-                                </motion.h1>
-
-                                {/* SVG Heart */}
-                                <motion.div
-                                    initial={{ scale: 0, rotate: -180 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    transition={{ delay: 1.1, type: "spring", stiffness: 200 }}
-                                    className="flex justify-center my-2"
-                                >
-                                    <GoldenHeart size={36} />
-                                </motion.div>
-
-                                <motion.h1
-                                    initial={{ x: 60, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: 0.8, duration: 0.8, ease: easeOut }}
-                                    className="gold-text-3d"
-                                    style={{ fontFamily: "'Great Vibes', cursive", fontSize: 'clamp(3rem, 11vw, 5rem)', lineHeight: 1.2 }}
-                                >
-                                    Parul
-                                </motion.h1>
-                            </div>
-
-                            {/* Decorative line bottom */}
-                            <motion.div
-                                initial={{ scaleX: 0 }}
-                                animate={{ scaleX: 1 }}
-                                transition={{ delay: 0.7, duration: 0.8 }}
-                            >
-                                <GoldDivider width="160px" />
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {/* ╔══════════════════════════════════════╗
-                       ║  STEP 3: DAY 1 — HALDI & DJ (8-13s) ║
-                       ╚══════════════════════════════════════╝ */}
-                    {step === 3 && (
-                        <motion.div
-                            key="step-day1"
-                            initial={{ opacity: 0, x: 80, filter: "blur(12px)" }}
-                            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, x: -80, filter: "blur(12px)" }}
-                            transition={{ duration: 0.8, ease: easeOut }}
-                            className="w-full"
-                        >
-                            <motion.div
-                                animate={{ y: [0, -8, 0] }}
-                                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-                                className="glass-card-light rounded-3xl p-6 relative overflow-hidden"
-                            >
-                                <CornerOrnaments color="#B8860B" />
-
-                                {/* Ambient glow */}
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-60 h-40 bg-amber-300 rounded-full blur-[80px] opacity-20 pointer-events-none" />
-
-                                {/* Date Badge */}
-                                <motion.div
-                                    initial={{ y: -20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="mb-6 text-center"
-                                >
-                                    <span
-                                        className="inline-block px-7 py-2 rounded-full font-bold text-white text-base shadow-lg"
-                                        style={{ background: 'linear-gradient(135deg, #FF8C00, #E67300, #FF6B00)' }}
-                                    >
-                                        🗓 19 April 2026
-                                    </span>
-                                </motion.div>
-
-                                <div className="space-y-5 relative z-10">
-                                    {/* Haldi */}
-                                    <motion.div
-                                        initial={{ x: -30, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="text-center relative py-4 rounded-2xl"
-                                        style={{ background: 'rgba(255, 215, 0, 0.08)' }}
-                                    >
-                                        <h4
-                                            className="text-2xl font-bold mb-1"
-                                            style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", color: '#5D4037' }}
-                                        >
-                                            हल्दी समारोह 🌼
-                                        </h4>
-                                        <p className="font-semibold text-xs tracking-[0.2em]" style={{ color: '#8B6914' }}>
-                                            MORNING • 10:00 AM
-                                        </p>
-                                    </motion.div>
-
-                                    <GoldDivider width="60%" />
-
-                                    {/* DJ Night */}
-                                    <motion.div
-                                        initial={{ x: 30, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.7 }}
-                                        className="text-center relative py-4 rounded-2xl"
-                                        style={{ background: 'rgba(75, 0, 130, 0.04)' }}
-                                    >
-                                        <h4
-                                            className="text-2xl font-bold mb-1"
-                                            style={{
-                                                fontFamily: "'Noto Sans Devanagari', sans-serif",
-                                                color: '#5D4037',
-                                                textShadow: '0 0 12px rgba(212, 175, 55, 0.25)',
-                                            }}
-                                        >
-                                            डीजे नाइट 🎵
-                                        </h4>
-                                        <p className="font-semibold text-xs tracking-[0.2em]" style={{ color: '#8B6914' }}>
-                                            EVENING • 07:00 PM
-                                        </p>
-                                    </motion.div>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {/* ╔══════════════════════════════════════════╗
-                       ║  STEP 4: DAY 2 — PHERAS & RECEPTION     ║
-                       ╚══════════════════════════════════════════╝ */}
-                    {step === 4 && (
-                        <motion.div
-                            key="step-day2"
-                            initial={{ opacity: 0, scale: 0.85, filter: "blur(15px)" }}
-                            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, y: 60, filter: "blur(15px)" }}
-                            transition={{ duration: 0.8, ease: easeOut }}
-                            className="w-full"
-                        >
-                            <motion.div
-                                animate={{ y: [0, -8, 0] }}
-                                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-                                className="glass-card rounded-3xl p-6 relative overflow-hidden"
-                                style={{ background: 'rgba(60, 0, 0, 0.75)', borderColor: 'rgba(212, 175, 55, 0.3)' }}
-                            >
-                                <CornerOrnaments color="#D4AF37" />
-
-                                {/* Havan fire glow */}
-                                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-600 rounded-full blur-[60px] opacity-25 animate-pulse pointer-events-none" />
-                                {/* Chandelier glow */}
-                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-24 bg-amber-200 rounded-full blur-[60px] opacity-10 pointer-events-none" />
-
-                                {/* Date */}
-                                <motion.div
-                                    initial={{ y: -20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="mb-6 text-center"
-                                >
-                                    <h3
-                                        className="text-lg font-bold tracking-[0.25em] pb-3"
-                                        style={{ color: '#D4AF37', borderBottom: '1px solid rgba(212, 175, 55, 0.2)' }}
-                                    >
-                                        🗓 20 April 2026
-                                    </h3>
-                                </motion.div>
-
-                                <div className="space-y-6 relative z-10">
-                                    {/* Pheras */}
-                                    <motion.div
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="text-center relative py-4 rounded-2xl"
-                                        style={{ background: 'rgba(255, 140, 0, 0.08)' }}
-                                    >
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-orange-500 rounded-full blur-[40px] opacity-30 animate-pulse -z-10 pointer-events-none" />
-                                        <h4
-                                            className="text-2xl md:text-3xl font-bold text-white text-shadow-white mb-1"
-                                            style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
-                                        >
-                                            पाणिग्रहण संस्कार 🔥
-                                        </h4>
-                                        <p className="text-sm tracking-[0.15em] font-medium" style={{ color: '#D4AF37' }}>
-                                            MORNING • 09:00 AM
-                                        </p>
-                                    </motion.div>
-
-                                    <GoldDivider width="60%" />
-
-                                    {/* Reception */}
-                                    <motion.div
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.7 }}
-                                        className="text-center relative py-4 rounded-2xl"
-                                        style={{ background: 'rgba(212, 175, 55, 0.05)' }}
-                                    >
-                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-40 h-14 bg-yellow-100 rounded-full blur-[40px] opacity-10 -z-10 pointer-events-none" />
-                                        <h4
-                                            className="text-2xl md:text-3xl font-bold text-white text-shadow-white mb-1"
-                                            style={{ fontFamily: "'Noto Sans Devanagari', sans-serif" }}
-                                        >
-                                            प्रीतिभोज एवं स्वागत 🥂
-                                        </h4>
-                                        <p className="text-sm tracking-[0.15em] font-medium" style={{ color: '#D4AF37' }}>
-                                            EVENING • 07:30 PM
-                                        </p>
-                                    </motion.div>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {/* ╔══════════════════════════════════════╗
-                       ║  STEP 5: VENUE & CLOSING (18s+)     ║
-                       ╚══════════════════════════════════════╝ */}
-                    {step === 5 && (
-                        <motion.div
-                            key="step-venue"
-                            initial={{ opacity: 0, y: 60, filter: "blur(15px)" }}
-                            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                            transition={{ duration: 1, ease: easeOut }}
-                            className="w-full"
-                        >
-                            <motion.div
-                                animate={{ y: [0, -6, 0] }}
-                                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                                className="rounded-2xl p-6 relative overflow-hidden text-center"
-                                style={{
-                                    background: 'linear-gradient(145deg, rgba(255, 248, 225, 0.93), rgba(255, 240, 200, 0.90))',
-                                    backdropFilter: 'blur(24px)',
-                                    border: '2px solid #D4AF37',
-                                    boxShadow: '0 0 40px rgba(212, 175, 55, 0.2), 0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.8)',
-                                }}
-                            >
-                                <CornerOrnaments color="#B8860B" />
-
-                                {/* Inner decorative border */}
-                                <div className="absolute inset-3 border border-amber-400/30 rounded-xl pointer-events-none" />
-
-                                {/* Palace Icon */}
-                                <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                                    className="text-5xl mb-3 relative z-10"
-                                    style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
-                                >
-                                    🏰
-                                </motion.div>
-
-                                <motion.h2
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="text-2xl font-bold mb-1 relative z-10"
-                                    style={{ fontFamily: "'Noto Sans Devanagari', sans-serif", color: '#5D4037' }}
-                                >
-                                    समारोह ग्रीन रिसॉर्ट
-                                </motion.h2>
-
-                                <motion.p
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.5 }}
-                                    className="mb-6 text-sm font-medium relative z-10 tracking-wide"
-                                    style={{ color: '#8B6914' }}
-                                >
-                                    📍 डाली बाई सर्कल, जोधपुर
-                                </motion.p>
-
-                                {/* Directions Button */}
-                                <motion.button
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.6 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => window.open('https://maps.google.com/?q=Samaroh+Green+Resort,+Jodhpur', '_blank')}
-                                    className="venue-btn px-8 py-3.5 rounded-full font-bold w-full mb-6 relative z-10 text-sm tracking-wider"
-                                    style={{ color: '#3E2723' }}
-                                >
-                                    📍 Get Directions
-                                </motion.button>
-
-                                <GoldDivider width="50%" />
-
-                                {/* Closing Message */}
-                                <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.8 }}
-                                    className="gold-text-3d relative z-10 mt-5"
-                                    style={{
-                                        fontFamily: "'Great Vibes', cursive",
-                                        fontSize: 'clamp(1.6rem, 7vw, 2.5rem)',
-                                        lineHeight: 1.4,
-                                    }}
-                                >
-                                    We look forward to<br />seeing you!
-                                </motion.p>
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                </AnimatePresence>
-            </div>
-
-            {/* ════ BOTTOM BAR: Progress + Controls ════ */}
-            <div className="relative z-50 w-full max-w-[400px] px-5 pb-5 flex items-center justify-between">
-                {/* Progress Dots */}
-                <ProgressDots current={step} total={TOTAL_STEPS} />
-
-                {/* Controls */}
-                <div className="flex gap-2">
-                    {step === 5 && (
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            onClick={handleReplay}
-                            className="nav-btn"
-                        >
-                            ↻ Replay
-                        </motion.button>
-                    )}
-                    {step < TOTAL_STEPS && (
-                        <button
-                            onClick={() => goToStep(step + 1)}
-                            className="nav-btn"
-                        >
-                            Next →
-                        </button>
-                    )}
-                </div>
-            </div>
-        </main>
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("reveal-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
     );
+
+    nodes.forEach((node) => observer.observe(node));
+
+    return () => observer.disconnect();
+  }, []);
+
+  async function toggleMusic() {
+    if (!audioRef.current) {
+      return;
+    }
+
+    if (musicEnabled) {
+      audioRef.current.pause();
+      setMusicEnabled(false);
+      return;
+    }
+
+    try {
+      await audioRef.current.play();
+      setMusicEnabled(true);
+    } catch {
+      setMusicEnabled(false);
+    }
+  }
+
+  return (
+    <>
+      <main className="invitation-page">
+        <div className="floral-haze" aria-hidden="true" />
+        <div className="floral-haze floral-haze-secondary" aria-hidden="true" />
+
+        <button
+          type="button"
+          className="music-toggle"
+          onClick={toggleMusic}
+          aria-pressed={musicEnabled}
+          aria-label={musicEnabled ? "पृष्ठभूमि संगीत बंद करें" : "पृष्ठभूमि संगीत शुरू करें"}
+        >
+          <span>{musicEnabled ? "संगीत बंद करें" : "संगीत शुरू करें"}</span>
+          <strong>{musicEnabled ? "♪" : "♫"}</strong>
+        </button>
+
+        <section className="hero-section reveal reveal-visible">
+          <div className="hero-shell">
+            <p className="hero-mantra">|| श्री गणेशाय नमः ||</p>
+            <h1 className="hero-title">शुभ विवाह</h1>
+            <p className="hero-subtitle">स्वर्णिम शुभारंभ • राजसी स्नेह • पारिवारिक उत्सव</p>
+
+            <OrnamentalDivider />
+
+            <div className="couple-stack" aria-label="दूल्हा और दुल्हन के नाम">
+              <span className="couple-role">वधू</span>
+              <h2 className="name name-top">Parul</h2>
+              <div className="weds-mark">
+                <span />
+                <p>weds</p>
+                <span />
+              </div>
+              <span className="couple-role">वर</span>
+              <h2 className="name name-bottom">Bharat</h2>
+            </div>
+
+            <p className="invitation-line">आपको सपरिवार सादर आमंत्रित किया जाता है</p>
+
+            <div className="countdown-panel">
+              <div className="countdown-copy">
+                <p className="section-tag">मंगल मुहूर्त की ओर</p>
+                <h3>विवाह उत्सव प्रारंभ होने में</h3>
+              </div>
+
+              <div className="countdown-grid" role="timer" aria-live="polite">
+                {countdownUnits.map((item) => (
+                  <div key={item.label} className="countdown-box">
+                    <strong>{item.value}</strong>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {timeLeft.finished && (
+                <p className="countdown-finished">मंगलमय विवाह उत्सव आरंभ हो चुका है।</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="content-section reveal">
+          <div className="section-heading">
+            <p className="section-tag">अनुष्ठान</p>
+            <h2>विवाह के पावन कार्यक्रम</h2>
+            <p>हर रस्म को सुगंध, संगीत और अपनत्व के साथ संजोया गया है।</p>
+          </div>
+
+          <div className="events-grid">
+            {EVENTS.map((event, index) => (
+              <EventCard key={`${event.title}-${event.date}`} event={event} index={index} />
+            ))}
+          </div>
+        </section>
+
+        <section className="content-section venue-section reveal">
+          <div className="section-heading">
+            <p className="section-tag">स्थान</p>
+            <h2>विवाह स्थल</h2>
+          </div>
+
+          <div className="venue-panel">
+            <div>
+              <p className="venue-name">Samaroh Green Resort</p>
+              <p className="venue-address">Dali Bai Circle</p>
+              <p className="venue-note">
+                गुलाबी शाम, स्वर्णिम रोशनी और अपनेपन से भरा एक भव्य उत्सव स्थल।
+              </p>
+            </div>
+
+            <a
+              className="venue-link"
+              href="https://maps.google.com/?q=Samaroh+Green+Resort,+Dali+Bai+Circle"
+              target="_blank"
+              rel="noreferrer"
+            >
+              स्थान देखें
+            </a>
+          </div>
+        </section>
+
+        <footer className="footer-section reveal">
+          <OrnamentalDivider />
+          <p>आपकी उपस्थिति हमारे लिए सौभाग्य होगी</p>
+        </footer>
+      </main>
+
+      <style jsx global>{`
+        :root {
+          --cream-050: #fffaf2;
+          --cream-100: #f6ead8;
+          --cream-200: #ebdcc5;
+          --maroon-700: #6d1736;
+          --maroon-800: #4e0d25;
+          --gold-400: #d6a74e;
+          --gold-500: #b98322;
+          --gold-600: #8d5f13;
+          --ink-700: #533a31;
+          --shadow-soft: 0 24px 60px rgba(102, 36, 57, 0.12);
+          --shadow-card: 0 18px 40px rgba(122, 62, 43, 0.13);
+          --border-soft: rgba(150, 91, 47, 0.18);
+        }
+
+        html {
+          scroll-behavior: smooth;
+        }
+
+        body {
+          margin: 0;
+          background:
+            radial-gradient(circle at 20% 20%, rgba(185, 131, 34, 0.14), transparent 24%),
+            radial-gradient(circle at 80% 10%, rgba(109, 23, 54, 0.08), transparent 26%),
+            linear-gradient(180deg, #fffdf8 0%, var(--cream-050) 36%, var(--cream-100) 100%);
+          color: var(--ink-700);
+        }
+
+        .invitation-page {
+          position: relative;
+          min-height: 100vh;
+          overflow: hidden;
+          padding: 88px 20px 64px;
+          isolation: isolate;
+        }
+
+        .invitation-page::before,
+        .invitation-page::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: -3;
+        }
+
+        .invitation-page::before {
+          opacity: 0.48;
+          background-image:
+            radial-gradient(circle at 1px 1px, rgba(138, 94, 36, 0.12) 1px, transparent 0),
+            linear-gradient(135deg, rgba(109, 23, 54, 0.035) 25%, transparent 25%),
+            linear-gradient(45deg, rgba(109, 23, 54, 0.03) 25%, transparent 25%);
+          background-size: 22px 22px, 120px 120px, 120px 120px;
+          background-position: 0 0, 0 0, 60px 60px;
+        }
+
+        .invitation-page::after {
+          opacity: 0.22;
+          background:
+            radial-gradient(circle at center, rgba(255, 255, 255, 0.28), transparent 38%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 30%);
+        }
+
+        .floral-haze {
+          position: absolute;
+          width: 340px;
+          height: 340px;
+          top: -80px;
+          left: -100px;
+          border-radius: 50%;
+          background:
+            radial-gradient(circle at 30% 30%, rgba(214, 167, 78, 0.32), transparent 40%),
+            radial-gradient(circle at 65% 60%, rgba(109, 23, 54, 0.13), transparent 46%);
+          filter: blur(18px);
+          opacity: 0.8;
+          pointer-events: none;
+          z-index: -1;
+        }
+
+        .floral-haze-secondary {
+          top: auto;
+          bottom: 8%;
+          left: auto;
+          right: -120px;
+          width: 400px;
+          height: 400px;
+          opacity: 0.55;
+        }
+
+        .music-toggle {
+          position: fixed;
+          top: 20px;
+          right: 18px;
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          border: 1px solid rgba(185, 131, 34, 0.28);
+          border-radius: 999px;
+          padding: 12px 16px;
+          background: rgba(255, 251, 243, 0.88);
+          color: var(--maroon-800);
+          box-shadow: 0 12px 30px rgba(88, 42, 32, 0.12);
+          backdrop-filter: blur(18px);
+          font: inherit;
+          cursor: pointer;
+          z-index: 20;
+          transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .music-toggle:hover,
+        .music-toggle:focus-visible {
+          transform: translateY(-2px);
+          box-shadow: 0 18px 34px rgba(88, 42, 32, 0.16);
+          border-color: rgba(185, 131, 34, 0.52);
+          outline: none;
+        }
+
+        .music-toggle span {
+          font-family: "Noto Sans Devanagari", sans-serif;
+          font-size: 0.92rem;
+        }
+
+        .music-toggle strong {
+          display: grid;
+          place-items: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #8d183f, #c69239);
+          color: #fff6e8;
+          font-size: 0.95rem;
+        }
+
+        .hero-section,
+        .content-section,
+        .footer-section {
+          width: min(1120px, 100%);
+          margin: 0 auto;
+        }
+
+        .hero-shell {
+          position: relative;
+          padding: clamp(36px, 7vw, 72px);
+          border-radius: 36px;
+          background:
+            linear-gradient(150deg, rgba(255, 251, 244, 0.96), rgba(244, 232, 210, 0.9)),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.08));
+          box-shadow: var(--shadow-soft);
+          border: 1px solid rgba(185, 131, 34, 0.18);
+          overflow: hidden;
+        }
+
+        .hero-shell::before,
+        .hero-shell::after {
+          content: "";
+          position: absolute;
+          inset: 18px;
+          border-radius: 28px;
+          pointer-events: none;
+        }
+
+        .hero-shell::before {
+          border: 1px solid rgba(185, 131, 34, 0.26);
+        }
+
+        .hero-shell::after {
+          inset: auto;
+          width: 220px;
+          height: 220px;
+          right: -65px;
+          bottom: -65px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(109, 23, 54, 0.12), transparent 68%);
+        }
+
+        .hero-mantra,
+        .section-tag,
+        .invitation-line,
+        .venue-note,
+        .footer-section p,
+        .section-heading p,
+        .event-card p,
+        .event-card span {
+          font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .hero-mantra,
+        .hero-title,
+        .section-heading h2,
+        .countdown-copy h3,
+        .venue-name,
+        .footer-section p {
+          background: linear-gradient(135deg, #8d5f13 0%, #e4c067 24%, #7e4b08 48%, #efcf82 72%, #8a5911 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: goldFlow 8s ease-in-out infinite;
+        }
+
+        .hero-mantra {
+          margin: 0;
+          text-align: center;
+          letter-spacing: 0.14em;
+          font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+          text-transform: uppercase;
+        }
+
+        .hero-title {
+          margin: 18px 0 10px;
+          text-align: center;
+          font-size: clamp(3rem, 10vw, 5.75rem);
+          line-height: 0.94;
+          font-weight: 700;
+          font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .hero-subtitle {
+          margin: 0;
+          text-align: center;
+          color: rgba(109, 23, 54, 0.7);
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          font-size: 0.82rem;
+        }
+
+        .ornamental-divider {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          margin: 28px auto;
+          width: min(300px, 100%);
+        }
+
+        .ornamental-divider span {
+          flex: 1;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(185, 131, 34, 0.75), transparent);
+        }
+
+        .ornamental-divider em {
+          font-style: normal;
+          color: var(--maroon-700);
+          font-size: 1.05rem;
+        }
+
+        .couple-stack {
+          text-align: center;
+          padding: 20px 0;
+        }
+
+        .couple-role {
+          display: inline-block;
+          margin-bottom: 8px;
+          color: rgba(109, 23, 54, 0.62);
+          font-size: 0.85rem;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+        }
+
+        .name {
+          margin: 0;
+          line-height: 0.9;
+          font-weight: 400;
+          color: var(--maroon-800);
+          font-family: "Great Vibes", cursive;
+          text-shadow: 0 12px 24px rgba(109, 23, 54, 0.08);
+        }
+
+        .name-top,
+        .name-bottom {
+          font-size: clamp(4rem, 10vw, 7rem);
+        }
+
+        .weds-mark {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          margin: 18px 0;
+        }
+
+        .weds-mark span {
+          width: min(96px, 18vw);
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(109, 23, 54, 0.45), transparent);
+        }
+
+        .weds-mark p {
+          margin: 0;
+          font-size: 1.1rem;
+          letter-spacing: 0.35em;
+          text-transform: uppercase;
+          color: rgba(109, 23, 54, 0.65);
+        }
+
+        .invitation-line {
+          margin: 12px auto 0;
+          max-width: 720px;
+          text-align: center;
+          font-size: clamp(1.12rem, 2.2vw, 1.35rem);
+          color: var(--maroon-700);
+        }
+
+        .countdown-panel {
+          margin-top: 34px;
+          padding: 24px;
+          border-radius: 26px;
+          background: rgba(255, 253, 248, 0.72);
+          border: 1px solid rgba(185, 131, 34, 0.15);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .countdown-copy {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+
+        .countdown-copy .section-tag {
+          margin-bottom: 8px;
+        }
+
+        .countdown-copy h3 {
+          margin: 0;
+          font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+          font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .countdown-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .countdown-box {
+          padding: 18px 14px;
+          border-radius: 22px;
+          text-align: center;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(245, 232, 211, 0.82));
+          border: 1px solid rgba(185, 131, 34, 0.14);
+        }
+
+        .countdown-box strong {
+          display: block;
+          margin-bottom: 6px;
+          font-size: clamp(1.65rem, 4vw, 2.6rem);
+          color: var(--maroon-800);
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
+        }
+
+        .countdown-box span {
+          display: block;
+          color: rgba(83, 58, 49, 0.78);
+          font-size: 0.92rem;
+        }
+
+        .countdown-finished {
+          margin: 18px 0 0;
+          text-align: center;
+          color: var(--maroon-700);
+          font-size: 1rem;
+          font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .content-section {
+          margin-top: 52px;
+          padding: 0 4px;
+        }
+
+        .section-heading {
+          text-align: center;
+          max-width: 720px;
+          margin: 0 auto 26px;
+        }
+
+        .section-tag {
+          margin: 0 0 8px;
+          letter-spacing: 0.26em;
+          text-transform: uppercase;
+          font-size: 0.78rem;
+          color: rgba(109, 23, 54, 0.7);
+        }
+
+        .section-heading h2 {
+          margin: 0;
+          font-size: clamp(2rem, 4vw, 3.25rem);
+          line-height: 1.05;
+          font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .section-heading p {
+          margin: 12px auto 0;
+          color: rgba(83, 58, 49, 0.8);
+          font-size: 1.02rem;
+          max-width: 620px;
+        }
+
+        .events-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 18px;
+        }
+
+        .event-card {
+          position: relative;
+          padding: 26px 22px;
+          border-radius: 28px;
+          background: linear-gradient(160deg, rgba(255, 253, 248, 0.92), rgba(244, 232, 211, 0.86));
+          border: 1px solid var(--border-soft);
+          box-shadow: var(--shadow-card);
+          overflow: hidden;
+          transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+        }
+
+        .event-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(circle at top right, rgba(109, 23, 54, 0.12), transparent 28%),
+            linear-gradient(135deg, rgba(214, 167, 78, 0.14), transparent 36%);
+          opacity: 0.8;
+          pointer-events: none;
+        }
+
+        .event-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 26px 46px rgba(109, 23, 54, 0.16);
+          border-color: rgba(185, 131, 34, 0.32);
+        }
+
+        .event-card-number {
+          position: absolute;
+          top: 18px;
+          right: 18px;
+          font-size: 0.78rem;
+          color: rgba(109, 23, 54, 0.42);
+          letter-spacing: 0.16em;
+        }
+
+        .event-card h3,
+        .venue-name {
+          margin: 0 0 10px;
+          font-family: "Noto Sans Devanagari", sans-serif;
+          font-size: 1.4rem;
+          color: var(--maroon-800);
+        }
+
+        .event-card p {
+          margin: 0 0 6px;
+          color: rgba(83, 58, 49, 0.82);
+          font-size: 1rem;
+        }
+
+        .event-card span {
+          color: var(--gold-600);
+          font-size: 0.98rem;
+          letter-spacing: 0.08em;
+        }
+
+        .venue-panel {
+          display: grid;
+          grid-template-columns: 1.25fr auto;
+          gap: 24px;
+          align-items: center;
+          padding: clamp(26px, 4vw, 38px);
+          border-radius: 34px;
+          background:
+            linear-gradient(140deg, rgba(89, 18, 42, 0.96), rgba(130, 34, 61, 0.92)),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent);
+          box-shadow: 0 24px 56px rgba(77, 20, 37, 0.22);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .venue-panel::before {
+          content: "";
+          position: absolute;
+          inset: 14px;
+          border: 1px solid rgba(228, 192, 103, 0.24);
+          border-radius: 24px;
+          pointer-events: none;
+        }
+
+        .venue-panel * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .venue-name {
+          font-size: clamp(2rem, 4.2vw, 3rem);
+        }
+
+        .venue-address {
+          margin: 0 0 10px;
+          color: rgba(255, 242, 220, 0.92);
+          font-size: 1.12rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .venue-note {
+          margin: 0;
+          max-width: 520px;
+          color: rgba(255, 239, 218, 0.78);
+          font-size: 1rem;
+        }
+
+        .venue-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 180px;
+          padding: 15px 24px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #f8e8c2, #d6a74e);
+          color: #521128;
+          text-decoration: none;
+          font-weight: 700;
+          box-shadow: 0 14px 28px rgba(20, 12, 7, 0.2);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .venue-link:hover,
+        .venue-link:focus-visible {
+          transform: translateY(-3px);
+          box-shadow: 0 20px 34px rgba(20, 12, 7, 0.28);
+          outline: none;
+        }
+
+        .footer-section {
+          padding: 40px 0 18px;
+          text-align: center;
+        }
+
+        .footer-section p {
+          margin: 0;
+          font-size: clamp(1.45rem, 3vw, 2.4rem);
+          font-family: "Noto Sans Devanagari", sans-serif;
+        }
+
+        .reveal {
+          opacity: 0;
+          transform: translateY(34px);
+          transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .reveal-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        @keyframes goldFlow {
+          0%,
+          100% {
+            background-position: 0% 50%;
+          }
+
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+
+        @media (max-width: 980px) {
+          .events-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .venue-panel {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 720px) {
+          .invitation-page {
+            padding: 84px 14px 42px;
+          }
+
+          .music-toggle {
+            top: 14px;
+            right: 14px;
+            padding: 10px 14px;
+            gap: 10px;
+          }
+
+          .music-toggle span {
+            font-size: 0.82rem;
+          }
+
+          .hero-shell {
+            border-radius: 28px;
+            padding: 30px 22px;
+          }
+
+          .countdown-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .events-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .event-card {
+            padding: 24px 18px;
+          }
+
+          .venue-link {
+            width: 100%;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          html {
+            scroll-behavior: auto;
+          }
+
+          *,
+          *::before,
+          *::after {
+            animation: none !important;
+            transition-duration: 0.01ms !important;
+            transition-delay: 0ms !important;
+          }
+
+          .reveal {
+            opacity: 1;
+            transform: none;
+          }
+        }
+      `}</style>
+    </>
+  );
 }
